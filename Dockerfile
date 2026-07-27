@@ -10,8 +10,8 @@ WORKDIR /var/www
 COPY . .
 
 ENV COMPOSER_MEMORY_LIMIT=-1
-# Kita tambahkan --no-scripts di baris bawah ini:
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
+
+RUN RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
 
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
