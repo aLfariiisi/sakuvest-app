@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Transaction;
+use App\Models\SavingTarget;
+use App\Models\Budget;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class DashboardController extends Controller
+{
+    public function index(Request $request)
+    {
+        $userId = Auth::id();
+        $bulanIni = date('m');
+        $tahunIni = date('Y');
+
+        // 1. Hitung total keseluruhan
+        $totalPemasukan = Transaction::where('user_id', $userId)
+                            ->where('tipe', 'masuk')
+                            ->sum('nominal');
+
+        $totalPengeluaran = Transaction::where('user_id', $userId)
+                            ->where('tipe', 'keluar')
+                            ->sum('nominal');
+
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        // 2. Ambil 5 Transaksi Terbaru
+        $transaksiTerbaru = Transaction::with('category')
+                            ->where('user_id', $userId)
+                            ->orderBy('tanggal', 'desc')
+                            ->orderBy('id', 'desc')
+                            ->take(5)
+                            ->get();
+
+        // 3. Data Grafik Per Bulan (ApexCharts) - Mapping 12 Bulan Penuh (Jan - Des)
+        $rawGrafik = Transaction::select(
+                DB::raw('MONTH(tanggal) as bulan'),
+                DB::raw('SUM(CASE WHEN tipe = "masuk" THEN nominal ELSE 0 END) as total_masuk'),
+                DB::raw('SUM(CASE WHEN tipe = "keluar" THEN nominal ELSE 0 END) as total_keluar')
+            )
+            ->where('user_id', $userId)
+            ->whereYear('tanggal', $tahunIni)
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get()
+            ->keyBy('bulan');
+
+        $grafikMasuk = [];
+        $grafikKeluar = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $grafikMasuk[] = isset($rawGrafik[$i]) ? (float) $rawGrafik[$i]->total_masuk : 0;
+            $grafikKeluar[] = isset($rawGrafik[$i]) ? (float) $rawGrafik[$i]->total_keluar : 0;
+        }
+
+        // 4. Target Tabungan
+        $savingTargets = SavingTarget::where('user_id', $userId)->take(3)->get();
+        foreach ($savingTargets as $target) {
+            $target->progress = $target->target_nominal > 0 
+                ? min(round(($target->terkumpul / $target->target_nominal) * 100, 2), 100) 
+                : 0;
+        }
+
+        // 5. Anggaran Bulanan
+        $budgets = Budget::with('category')
+                    ->where('user_id', $userId)
+                    ->where('bulan', $bulanIni)
+                    ->where('tahun', $tahunIni)
+                    ->take(3)
+                    ->get();
+
+        foreach ($budgets as $budget) {
+            $sudahDipakai = Transaction::where('user_id', $userId)
+                            ->where('category_id', $budget->category_id)
+                            ->where('tipe', 'keluar')
+                            ->whereMonth('tanggal', $bulanIni)
+                            ->whereYear('tanggal', $tahunIni)
+                            ->sum('nominal');
+
+            $budget->sudah_dipakai = $sudahDipakai;
+            $budget->sisa = $budget->limit_nominal - $sudahDipakai;
+            $budget->progress = $budget->limit_nominal > 0 
+                ? min(round(($sudahDipakai / $budget->limit_nominal) * 100, 2), 100) 
+                : 0;
+        }
+
+        // Total Tabungan untuk Card ke-4
+        $totalTabungan = $savingTargets->sum('terkumpul');
+
+        return view('dashboard', compact(
+            'totalPemasukan',
+            'totalPengeluaran',
+            'saldo',
+            'totalTabungan',
+            'transaksiTerbaru',
+            'grafikMasuk',
+            'grafikKeluar',
+            'savingTargets',
+            'budgets'
+        ));
+    }
+}
