@@ -16,4 +16,4 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-
 
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php -S 0.0.0.0:8000 -t public
+CMD php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:8000 -t public
