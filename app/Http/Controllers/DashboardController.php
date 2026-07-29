@@ -37,18 +37,20 @@ class DashboardController extends Controller
                             ->take(5)
                             ->get();
 
-        // 3. Data Grafik Per Bulan (ApexCharts) - Mapping 12 Bulan Penuh (Jan - Des)
+        // 3. Data Grafik Per Bulan (ApexCharts) - Mapping 12 Bulan Penuh (Jan - Des) [Kompatibel PostgreSQL]
         $rawGrafik = Transaction::select(
-                DB::raw('MONTH(tanggal) as bulan'),
-                DB::raw('SUM(CASE WHEN tipe = "masuk" THEN nominal ELSE 0 END) as total_masuk'),
-                DB::raw('SUM(CASE WHEN tipe = "keluar" THEN nominal ELSE 0 END) as total_keluar')
+                DB::raw('EXTRACT(MONTH FROM tanggal) as bulan'),
+                DB::raw("SUM(CASE WHEN tipe = 'masuk' THEN nominal ELSE 0 END) as total_masuk"),
+                DB::raw("SUM(CASE WHEN tipe = 'keluar' THEN nominal ELSE 0 END) as total_keluar")
             )
             ->where('user_id', $userId)
             ->whereYear('tanggal', $tahunIni)
-            ->groupBy('bulan')
+            ->groupBy(DB::raw('EXTRACT(MONTH FROM tanggal)'))
             ->orderBy('bulan')
             ->get()
-            ->keyBy('bulan');
+            ->keyBy(function ($item) {
+                return (int) $item->bulan;
+            });
 
         $grafikMasuk = [];
         $grafikKeluar = [];
