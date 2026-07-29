@@ -33,14 +33,35 @@ class SavingTargetController extends Controller
             'terkumpul' => 'nullable|numeric|min:0',
         ]);
 
-        SavingTarget::create([
-            'user_id' => Auth::id(),
+        $userId = Auth::id();
+        $terkumpulAwal = $request->terkumpul ?? 0;
+
+        // 1. Buat target tabungan baru
+        $savingTarget = SavingTarget::create([
+            'user_id' => $userId,
             'nama_target' => $request->nama_target,
             'target_nominal' => $request->target_nominal,
-            'terkumpul' => $request->terkumpul ?? 0,
+            'terkumpul' => $terkumpulAwal,
         ]);
 
-        return redirect()->route('saving-targets.index')->with('success', 'Target tabungan berhasil ditambahkan!');
+        // 2. Jika saat membuat target langsung diisi dana awal (terkumpul > 0), catat sebagai pengeluaran setor tabungan
+        if ($terkumpulAwal > 0) {
+            $category = Category::firstOrCreate(
+                ['user_id' => $userId, 'nama' => 'Tabungan'],
+                ['tipe' => 'keluar']
+            );
+
+            Transaction::create([
+                'user_id' => $userId,
+                'category_id' => $category->id,
+                'deskripsi' => 'Setor Tabungan: ' . $savingTarget->nama_target,
+                'tipe' => 'keluar',
+                'nominal' => $terkumpulAwal,
+                'tanggal' => date('Y-m-d'),
+            ]);
+        }
+
+        return redirect()->route('saving-targets.index')->with('success', 'Target tabungan berhasil ditambahkan dan dicatat ke riwayat!');
     }
 
     public function update(Request $request, SavingTarget $savingTarget)
@@ -67,7 +88,7 @@ class SavingTargetController extends Controller
     public function destroy(SavingTarget $savingTarget)
     {
         if ($savingTarget->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action নিশana.');
+            abort(403, 'Unauthorized action.');
         }
 
         $userId = Auth::id();
@@ -126,7 +147,6 @@ class SavingTargetController extends Controller
         return redirect()->route('saving-targets.index')->with('success', 'Berhasil menyetor ke tabungan!');
     }
 
-    // Fungsi Baru: Tarik / Pengambilan Saldo dari Tabungan
     public function withdraw(Request $request, SavingTarget $savingTarget)
     {
         if ($savingTarget->user_id !== Auth::id()) {
@@ -144,17 +164,14 @@ class SavingTargetController extends Controller
             return back()->withErrors(['tarik_nominal' => 'Nominal penarikan melebihi saldo terkumpul saat ini!']);
         }
 
-        // 1. Kurangi saldo terkumpul pada target tabungan
         $savingTarget->terkumpul -= $nominal;
         $savingTarget->save();
 
-        // 2. Buat kategori "Penarikan Tabungan" bertipe masuk
         $category = Category::firstOrCreate(
             ['user_id' => $userId, 'nama' => 'Penarikan Tabungan'],
             ['tipe' => 'masuk']
         );
 
-        // 3. Catat ke riwayat transaksi sebagai Pemasukan (Masuk)
         Transaction::create([
             'user_id' => $userId,
             'category_id' => $category->id,
