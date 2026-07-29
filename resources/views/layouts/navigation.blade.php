@@ -104,7 +104,7 @@
             <!-- Sidebar Footer (User Info & Logout) -->
             <div class="p-4 border-t border-gray-200 bg-gray-50">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500 mb-3">{{ Auth::user()->email}</div>
+                <div class="font-medium text-sm text-gray-500 mb-3">{{ Auth::user()->email }}</div>
 
                 <div class="space-y-1">
                     <x-responsive-nav-link :href="route('profile.edit')">

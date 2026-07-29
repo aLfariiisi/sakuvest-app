@@ -1,13 +1,13 @@
 <x-app-layout>
-    <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-[#F8FAFC]">
+    <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-[#F8FAFC] overflow-x-hidden w-full">
         <!-- Memanggil Komponen Sidebar Utama -->
         <x-sidebar />
 
         <!-- Konten Utama -->
-        <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
+        <div class="flex-1 w-full md:ml-[280px] flex flex-col min-h-screen overflow-x-hidden">
             <!-- Navbar -->
-            <header class="h-[80px] bg-white border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-40">
-                <div class="flex items-center gap-4 w-96">
+            <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
+                <div class="flex items-center gap-3 w-full sm:w-96">
                     <div class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
@@ -16,12 +16,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <button class="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition relative">
-                        <i data-lucide="bell" class="w-5 h-5"></i>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
-                    <div class="h-8 w-px bg-slate-200"></div>
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold shadow-sm shadow-red-500/20">
                             {{ substr(Auth::user()->name, 0, 1) }}
@@ -35,13 +31,13 @@
             </header>
 
             <!-- Body Dashboard -->
-            <main class="p-8 space-y-6 flex-1">
-                <div class="flex justify-between items-center">
+            <main class="p-4 sm:p-8 space-y-6 flex-1 w-full max-w-full overflow-x-hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-900">Dashboard Keuangan</h1>
                         <p class="text-sm text-slate-500 mt-0.5">Ringkasan aktivitas finansial dan laporan Sakuvest Anda.</p>
                     </div>
-                    <div class="flex gap-3">
+                    <div>
                         <a href="{{ route('transactions.index') }}" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 py-3 text-sm font-semibold shadow-sm shadow-red-500/25 transition flex items-center gap-2">
                             <i data-lucide="plus" class="w-4 h-4"></i> Tambah Transaksi
                         </a>
@@ -116,7 +112,7 @@
                 </div>
 
                 <!-- 2. ApexCharts Statistik Bulanan -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full overflow-hidden">
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <h3 class="text-lg font-bold text-slate-900">Statistik Arus Kas</h3>
@@ -129,16 +125,16 @@
                     <div id="chartStatistik" class="w-full h-72"></div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                     <!-- 3. Recent Transaction -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 flex flex-col justify-between">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 flex flex-col justify-between overflow-hidden">
                         <div>
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-lg font-bold text-slate-900">Transaksi Terbaru</h3>
                                 <a href="{{ route('transactions.index') }}" class="text-xs font-semibold text-red-500 hover:underline">Lihat Semua</a>
                             </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left border-collapse min-w-[500px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-xs font-semibold text-slate-400 uppercase border-b border-slate-200">
                                             <th class="py-3 px-4 rounded-l-xl">Deskripsi</th>
@@ -173,7 +169,7 @@
                     </div>
 
                     <!-- 4. Budget & 5. Saving Goals -->
-                    <div class="space-y-6">
+                    <div class="space-y-6 w-full">
                         <!-- Anggaran Bulanan -->
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                             <h3 class="text-lg font-bold text-slate-900 mb-4">Anggaran Bulanan</h3>
