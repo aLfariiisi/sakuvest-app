@@ -232,7 +232,6 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
                         <select name="category_id" x-model="categoryId" class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
-                            <option value="">Tanpa Kategori</option>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->nama }} ({{ ucfirst($cat->tipe) }})</option>
                             @endforeach
