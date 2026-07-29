@@ -14,12 +14,13 @@ class ReportController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        // Ambil transaksi berdasarkan bulan dan tahun yang dipilih
+        // Ambil transaksi berdasarkan bulan, tahun, dan diurutkan dari yang terbaru (tanggal & jam)
         $transactions = Transaction::with('category')
             ->where('user_id', $userId)
             ->whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
             ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // Hitung ringkasan statistik dengan mengecualikan mutasi tabungan
