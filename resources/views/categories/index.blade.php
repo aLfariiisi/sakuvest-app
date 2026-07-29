@@ -1,12 +1,38 @@
 <x-app-layout>
     <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-[#F8FAFC]">
-        <!-- Memanggil Komponen Sidebar -->
+        <!-- Sidebar -->
         <x-sidebar />
 
         <!-- Konten Utama -->
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Memanggil Komponen Navbar -->
-            <x-navbar />
+            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
+            <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
+                <div class="flex items-center gap-3 w-full sm:w-96">
+                    <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+
+                    <div class="relative w-full">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" placeholder="Cari transaksi atau data..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold shadow-sm shadow-red-500/20">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <p class="text-sm font-semibold text-slate-800 leading-tight">{{ Auth::user()->name }}</p>
+                            <p class="text-xs text-slate-500">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
             <!-- Body Kategori -->
             <main class="p-8 space-y-6 flex-1">
@@ -22,7 +48,7 @@
                 @endif
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Form Tambah Kategori Menggunakan Komponen Card -->
+                    <!-- Form Tambah Kategori -->
                     <x-card class="h-fit">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Tambah Kategori Baru</h3>
                         <form action="{{ route('categories.store') }}" method="POST" class="space-y-4">
@@ -44,7 +70,7 @@
                         </form>
                     </x-card>
 
-                    <!-- Tabel Daftar Kategori Menggunakan Komponen Card -->
+                    <!-- Tabel Daftar Kategori -->
                     <x-card class="lg:col-span-2">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Daftar Kategori</h3>
                         <div class="overflow-x-auto">
@@ -63,7 +89,6 @@
                                             <td class="py-4 px-4 text-slate-500 font-medium">{{ $index + 1 }}</td>
                                             <td class="py-4 px-4 font-semibold text-slate-800">{{ $cat->nama }}</td>
                                             <td class="py-4 px-4">
-                                                <!-- Menggunakan Komponen Badge -->
                                                 <x-badge :type="$cat->tipe">
                                                     {{ ucfirst($cat->tipe) }}
                                                 </x-badge>
