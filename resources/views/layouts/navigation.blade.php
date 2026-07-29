@@ -1,11 +1,11 @@
-<nav x-data="{ sidebarOpen: false }" class="bg-white border-b border-gray-100 relative z-50">
+<nav x-data="{ sidebarOpen: false }" class="bg-white border-b border-gray-100 relative z-50 w-full">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center space-x-3">
-                <!-- Hamburger Button (Pindah ke Kiri) -->
+                <!-- Hamburger Button (Tombol Garis Tiga di Kiri Khusus Mobile) -->
                 <div class="flex items-center sm:hidden">
-                    <button @click="sidebarOpen = !sidebarOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
+                    <button @click="sidebarOpen = !sidebarOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -15,7 +15,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        <x-application-logo class="block h-8 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <!-- Mobile Slide-over Sidebar & Backdrop -->
+    <!-- Mobile Slide-over Sidebar & Backdrop (Animasi Geser dari Kiri) -->
     <div x-cloak>
         <!-- Backdrop -->
         <div x-show="sidebarOpen" 

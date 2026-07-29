@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        
 
         <title>SakuVest</title>
 
@@ -25,12 +24,24 @@
         <style>
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
+                overflow-x: hidden; /* Mencegah layar bergeser ke kanan-kiri */
             }
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-[#0F172A] antialiased">
-        <div class="min-h-screen flex">
-            {{ $slot }}
+        <div class="min-h-screen flex flex-col">
+            @isset($header)
+                <header class="bg-white shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endisset
+
+            <!-- Page Content -->
+            <main class="flex-1 w-full">
+                {{ $slot }}
+            </main>
         </div>
 
         <!-- Initialize Lucide Icons -->
