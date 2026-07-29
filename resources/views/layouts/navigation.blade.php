@@ -1,19 +1,19 @@
 <nav x-data="{ sidebarOpen: false }" class="bg-white border-b border-gray-100 relative z-50 w-full">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center space-x-3">
-                <!-- Hamburger Button (Tombol Garis Tiga di Kiri Khusus Mobile) -->
+                <!-- Hamburger Button (Tombol Garis Tiga Di Kiri Atas) -->
                 <div class="flex items-center sm:hidden">
-                    <button @click="sidebarOpen = !sidebarOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    <button @click="sidebarOpen = true" class="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
 
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
+                <div class="flex items-center">
                     <a href="{{ route('dashboard') }}">
                         <x-application-logo class="block h-8 w-auto fill-current text-gray-800" />
                     </a>
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <!-- Mobile Slide-over Sidebar & Backdrop (Animasi Geser dari Kiri) -->
+    <!-- Mobile Slide-over Sidebar & Backdrop -->
     <div x-cloak>
         <!-- Backdrop -->
         <div x-show="sidebarOpen" 
@@ -104,7 +104,7 @@
             <!-- Sidebar Footer (User Info & Logout) -->
             <div class="p-4 border-t border-gray-200 bg-gray-50">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500 mb-3">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-sm text-gray-500 mb-3">{{ Auth::user()->email}</div>
 
                 <div class="space-y-1">
                     <x-responsive-nav-link :href="route('profile.edit')">

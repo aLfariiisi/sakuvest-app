@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>SakuVest</title>
@@ -24,12 +24,13 @@
         <style>
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
-                overflow-x: hidden; /* Mencegah layar bergeser ke kanan-kiri */
+                touch-action: manipulation;
+                -webkit-text-size-adjust: 100%;
             }
         </style>
     </head>
-    <body class="bg-[#F8FAFC] text-[#0F172A] antialiased">
-        <div class="min-h-screen flex flex-col">
+    <body class="bg-[#F8FAFC] text-[#0F172A] antialiased overflow-x-hidden">
+        <div class="min-h-screen flex flex-col w-full">
             @isset($header)
                 <header class="bg-white shadow">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
