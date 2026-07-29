@@ -22,7 +22,6 @@
         <x-sidebar />
 
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
                     <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
@@ -94,13 +93,20 @@
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
                                 <select name="category_id" id="category_select" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="autoSetTipe(this)">
-                                    <option value="">Tanpa Kategori (Pilih Manual)</option>
+                                    <option value="">Tanpa Kategori</option>
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}" data-tipe="{{ $cat->tipe }}">
                                             {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
                                         </option>
                                     @endforeach
+                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
                                 </select>
+
+                                <!-- Input Muncul Jika Pilih Kategori Baru -->
+                                <div id="new_category_container" class="mt-3" style="display: none;">
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kategori Baru</label>
+                                    <input type="text" name="new_category_nama" id="new_category_input" placeholder="Contoh: Makan, Transport, dll" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-2.5 px-4 bg-red-50/30">
+                                </div>
                             </div>
 
                             <div>
@@ -133,13 +139,14 @@
                     <x-card class="lg:col-span-2">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Riwayat Transaksi</h3>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse min-w-[650px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-xs font-semibold text-slate-400 uppercase border-b border-slate-200">
-                                        <th class="py-3 px-4 rounded-l-xl">Tanggal</th>
-                                        <th class="py-3 px-4">Deskripsi</th>
+                                        <th class="py-3 px-4 rounded-l-xl">Deskripsi</th>
                                         <th class="py-3 px-4">Kategori</th>
-                                        <th class="py-3 px-4 text-right">Nominal</th>
+                                        <th class="py-3 px-4">Tanggal</th>
+                                        <th class="py-3 px-4 text-right">Uang Masuk</th>
+                                        <th class="py-3 px-4 text-right">Uang Keluar</th>
                                         <th class="py-3 px-4 text-right rounded-r-xl">Aksi</th>
                                     </tr>
                                 </thead>
@@ -152,19 +159,35 @@
                                                          optional($trx->category)->nama == 'Tabungan';
                                         @endphp
                                         <tr class="hover:bg-slate-50/80 transition">
-                                            <td class="py-4 px-4 text-slate-400 text-xs">{{ date('d M Y', strtotime($trx->tanggal)) }}</td>
                                             <td class="py-4 px-4 font-semibold text-slate-800">{{ $trx->deskripsi }}</td>
                                             <td class="py-4 px-4">
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
                                                     {{ $trx->category->nama ?? '-' }}
                                                 </span>
                                             </td>
-                                            <td class="py-4 px-4 text-right font-bold {{ $trx->tipe == 'masuk' ? 'text-emerald-600' : 'text-red-500' }}">
-                                                {{ $trx->tipe == 'masuk' ? '+' : '-' }} Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                            <td class="py-4 px-4 text-slate-400 text-xs">{{ date('d M Y', strtotime($trx->tanggal)) }}</td>
+                                            
+                                            <!-- Uang Masuk -->
+                                            <td class="py-4 px-4 text-right font-bold text-emerald-600">
+                                                @if($trx->tipe == 'masuk')
+                                                    Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                                @else
+                                                    <span class="text-slate-300 font-normal">-</span>
+                                                @endif
                                             </td>
+
+                                            <!-- Uang Keluar -->
+                                            <td class="py-4 px-4 text-right font-bold text-red-500">
+                                                @if($trx->tipe == 'keluar')
+                                                    Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                                @else
+                                                    <span class="text-slate-300 font-normal">-</span>
+                                                @endif
+                                            </td>
+
                                             <td class="py-4 px-4 text-right">
                                                 @if($isSavings)
-                                                    <span class="text-[11px] text-slate-400 italic bg-slate-100 px-2.5 py-1 rounded-lg">Terkunci (Kelola di Tabungan)</span>
+                                                    <span class="text-[11px] text-slate-400 italic bg-slate-100 px-2.5 py-1 rounded-lg">Terkunci</span>
                                                 @else
                                                     <div class="space-x-2 inline-block">
                                                         <button type="button" @click="openEditModal({{ json_encode($trx) }})" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs transition">
@@ -181,7 +204,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="py-8 text-center text-slate-400 text-sm">Belum ada transaksi tercatat.</td>
+                                            <td colspan="6" class="py-8 text-center text-slate-400 text-sm">Belum ada transaksi tercatat.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -245,24 +268,42 @@
 
     <script>
         function autoSetTipe(categorySelect) {
+            const selectedValue = categorySelect.value;
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             const tipe = selectedOption.getAttribute('data-tipe');
             
             const tipeSelect = document.getElementById('tipe_select');
             const tipeHidden = document.getElementById('tipe_hidden');
             const tipeInfo = document.getElementById('tipe_info');
-            
-            if (tipe) {
-                tipeSelect.value = tipe;
-                tipeSelect.disabled = true;
-                tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
-                tipeHidden.value = tipe;
-                tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori.";
-            } else {
+            const newCatContainer = document.getElementById('new_category_container');
+            const newCatInput = document.getElementById('new_category_input');
+
+            if (selectedValue === 'new') {
+                newCatContainer.style.display = 'block';
+                newCatInput.required = true;
+
+                // Buka tipe transaksi agar bisa dipilih bebas untuk kategori baru
                 tipeSelect.disabled = false;
                 tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
                 tipeHidden.value = tipeSelect.value;
-                tipeInfo.innerText = "Silakan pilih tipe transaksi secara manual karena tanpa kategori.";
+                tipeInfo.innerText = "Masukkan nama kategori baru dan tentukan tipe transaksinya.";
+            } else {
+                newCatContainer.style.display = 'none';
+                newCatInput.required = false;
+                newCatInput.value = '';
+
+                if (tipe) {
+                    tipeSelect.value = tipe;
+                    tipeSelect.disabled = true;
+                    tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
+                    tipeHidden.value = tipe;
+                    tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori.";
+                } else {
+                    tipeSelect.disabled = false;
+                    tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
+                    tipeHidden.value = tipeSelect.value;
+                    tipeInfo.innerText = "Silakan pilih tipe transaksi secara manual karena tanpa kategori.";
+                }
             }
         }
 

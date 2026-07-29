@@ -25,12 +25,11 @@ class TransactionController extends Controller
             $query->whereYear('tanggal', $request->tahun);
         }
     
-        // 1. Urutkan transaksi berdasarkan tanggal dan waktu pembuatan terbaru (jam/menit)
-        $transactions = $query->orderBy('tanggal', 'desc')
-                              ->orderBy('created_at', 'desc')
-                              ->get();
+        // Urutkan dari yang lama ke baru (Akuntansi formal: asc)
+        $transactions = $query->orderBy('tanggal', 'asc')
+                            ->orderBy('created_at', 'asc')
+                            ->get();
 
-        // 2. Saring kategori agar kategori otomatis tabungan tidak muncul di pilihan form tambah transaksi
         $categories = Category::where('user_id', $userId)
             ->whereNotIn('nama', ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'])
             ->get();
@@ -43,23 +42,49 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable',
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'tipe' => 'required|in:masuk,keluar',
             'nominal' => 'required|numeric|min:0',
+            'new_category_nama' => 'nullable|string|max:255',
         ]);
 
-        // Validasi ekstra: Pastikan user tidak sengaja memasukkan kategori sistem yang diblokir lewat celah request
-        $category = Category::find($request->category_id);
-        $restrictedCategories = ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'];
-        if ($category && in_array($category->nama, $restrictedCategories)) {
-            return back()->withErrors(['category_id' => 'Kategori sistem ini tidak dapat dipilih secara manual.']);
+        $categoryId = $request->category_id;
+
+        // Jika user memilih opsi tambah kategori baru
+        if ($categoryId === 'new' && !empty($request->new_category_nama)) {
+            // Cek apakah kategori dengan nama tersebut sudah ada untuk user ini agar tidak duplikat
+            $existingCategory = Category::where('user_id', Auth::id())
+                ->where('nama', $request->new_category_nama)
+                ->first();
+
+            if ($existingCategory) {
+                $categoryId = $existingCategory->id;
+            } else {
+                $newCat = Category::create([
+                    'user_id' => Auth::id(),
+                    'nama' => $request->new_category_nama,
+                    'tipe' => $request->tipe, // Mengikuti tipe transaksi yang dipilih
+                ]);
+                $categoryId = $newCat->id;
+            }
+        } elseif ($categoryId === 'new' && empty($request->new_category_nama)) {
+            return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+        } elseif (!empty($categoryId)) {
+            // Validasi kategori sistem yang diblokir
+            $category = Category::find($categoryId);
+            $restrictedCategories = ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'];
+            if ($category && in_array($category->nama, $restrictedCategories)) {
+                return back()->withErrors(['category_id' => 'Kategori sistem ini tidak dapat dipilih secara manual.']);
+            }
+        } else {
+            $categoryId = null; // Tanpa Kategori
         }
 
         Transaction::create([
             'user_id' => Auth::id(),
-            'category_id' => $request->category_id,
+            'category_id' => $categoryId,
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
             'tipe' => $request->tipe,
@@ -75,7 +100,6 @@ class TransactionController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Cek apakah ini transaksi tabungan (dikunci total di riwayat)
         $isSavings = str_starts_with($transaction->deskripsi, 'Setor Tabungan:') || 
                      str_starts_with($transaction->deskripsi, 'Penarikan Tabungan:') || 
                      str_starts_with($transaction->deskripsi, 'Refund Tabungan') ||
@@ -94,11 +118,8 @@ class TransactionController extends Controller
         ]);
 
         $userId = Auth::id();
-
-        // Hapus transaksi lama agar tidak mengubah data in-place
         $transaction->delete();
 
-        // Buat sebagai riwayat transaksi baru
         Transaction::create([
             'user_id' => $userId,
             'category_id' => $request->category_id,
@@ -117,7 +138,6 @@ class TransactionController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Cek apakah ini transaksi tabungan
         $isSavings = str_starts_with($transaction->deskripsi, 'Setor Tabungan:') || 
                      str_starts_with($transaction->deskripsi, 'Penarikan Tabungan:') || 
                      str_starts_with($transaction->deskripsi, 'Refund Tabungan') ||
