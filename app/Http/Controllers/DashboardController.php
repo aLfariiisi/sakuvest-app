@@ -18,14 +18,24 @@ class DashboardController extends Controller
         $bulanIni = date('m');
         $tahunIni = date('Y');
 
-        // 1. Hitung total keseluruhan
-        $totalPemasukan = Transaction::where('user_id', $userId)
-                            ->where('tipe', 'masuk')
-                            ->sum('nominal');
+        $allTransactions = Transaction::with('category')->where('user_id', $userId)->get();
 
-        $totalPengeluaran = Transaction::where('user_id', $userId)
-                            ->where('tipe', 'keluar')
-                            ->sum('nominal');
+        // 1. Hitung total keseluruhan (Tanpa mutasi tabungan)
+        $totalPemasukan = $allTransactions->filter(function ($item) {
+            $isTabunganMasuk = str_starts_with($item->deskripsi, 'Penarikan Tabungan:') || 
+                               str_starts_with($item->deskripsi, 'Refund Tabungan') ||
+                               optional($item->category)->nama == 'Penarikan Tabungan' ||
+                               optional($item->category)->nama == 'Pencairan Tabungan Dihapus';
+            
+            return $item->tipe === 'masuk' && !$isTabunganMasuk;
+        })->sum('nominal');
+
+        $totalPengeluaran = $allTransactions->filter(function ($item) {
+            $isTabunganKeluar = str_starts_with($item->deskripsi, 'Setor Tabungan:') || 
+                                optional($item->category)->nama == 'Tabungan';
+            
+            return $item->tipe === 'keluar' && !$isTabunganKeluar;
+        })->sum('nominal');
 
         $saldo = $totalPemasukan - $totalPengeluaran;
 
