@@ -12,7 +12,9 @@ class SavingTargetController extends Controller
 {
     public function index()
     {
-        $savingTargets = SavingTarget::where('user_id', Auth::id())
+        $userId = Auth::id();
+
+        $savingTargets = SavingTarget::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($target) {
@@ -22,7 +24,12 @@ class SavingTargetController extends Controller
                 return $target;
             });
 
-        return view('saving-targets.index', compact('savingTargets'));
+        // Ambil daftar kategori user (kecuali kategori sistem)
+        $categories = Category::where('user_id', $userId)
+            ->whereNotIn('nama', ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'])
+            ->get();
+
+        return view('saving-targets.index', compact('savingTargets', 'categories'));
     }
 
     public function store(Request $request)
@@ -31,10 +38,36 @@ class SavingTargetController extends Controller
             'nama_target' => 'required|string|max:255',
             'target_nominal' => 'required|numeric|min:1',
             'terkumpul' => 'nullable|numeric|min:0',
+            'category_id' => 'required',
+            'new_category_nama' => 'nullable|string|max:255',
+            'tipe' => 'nullable|in:masuk,keluar',
         ]);
 
         $userId = Auth::id();
         $terkumpulAwal = $request->terkumpul ?? 0;
+        $categoryId = $request->category_id;
+
+        // Tangani jika user memilih tambah kategori baru inline
+        if ($categoryId === 'new') {
+            if (empty($request->new_category_nama)) {
+                return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+            }
+
+            $existingCategory = Category::where('user_id', $userId)
+                ->where('nama', $request->new_category_nama)
+                ->first();
+
+            if ($existingCategory) {
+                $categoryId = $existingCategory->id;
+            } else {
+                $newCat = Category::create([
+                    'user_id' => $userId,
+                    'nama' => $request->new_category_nama,
+                    'tipe' => $request->tipe ?? 'keluar',
+                ]);
+                $categoryId = $newCat->id;
+            }
+        }
 
         // 1. Buat target tabungan baru
         $savingTarget = SavingTarget::create([
@@ -44,16 +77,11 @@ class SavingTargetController extends Controller
             'terkumpul' => $terkumpulAwal,
         ]);
 
-        // 2. Jika saat membuat target langsung diisi dana awal (terkumpul > 0), catat sebagai pengeluaran setor tabungan
+        // 2. Jika ada setoran awal, catat ke transaksi menggunakan kategori yang dipilih user
         if ($terkumpulAwal > 0) {
-            $category = Category::firstOrCreate(
-                ['user_id' => $userId, 'nama' => 'Tabungan'],
-                ['tipe' => 'keluar']
-            );
-
             Transaction::create([
                 'user_id' => $userId,
-                'category_id' => $category->id,
+                'category_id' => $categoryId,
                 'deskripsi' => 'Setor Tabungan: ' . $savingTarget->nama_target,
                 'tipe' => 'keluar',
                 'nominal' => $terkumpulAwal,
@@ -61,7 +89,7 @@ class SavingTargetController extends Controller
             ]);
         }
 
-        return redirect()->route('saving-targets.index')->with('success', 'Target tabungan berhasil ditambahkan dan dicatat ke riwayat!');
+        return redirect()->route('saving-targets.index')->with('success', 'Target tabungan berhasil ditambahkan!');
     }
 
     public function update(Request $request, SavingTarget $savingTarget)
@@ -122,22 +150,41 @@ class SavingTargetController extends Controller
 
         $request->validate([
             'tambah_nominal' => 'required|numeric|min:1',
+            'category_id' => 'required',
+            'new_category_nama' => 'nullable|string|max:255',
         ]);
 
         $userId = Auth::id();
         $nominal = $request->tambah_nominal;
+        $categoryId = $request->category_id;
+
+        if ($categoryId === 'new') {
+            if (empty($request->new_category_nama)) {
+                return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+            }
+
+            $existingCategory = Category::where('user_id', $userId)
+                ->where('nama', $request->new_category_nama)
+                ->first();
+
+            if ($existingCategory) {
+                $categoryId = $existingCategory->id;
+            } else {
+                $newCat = Category::create([
+                    'user_id' => $userId,
+                    'nama' => $request->new_category_nama,
+                    'tipe' => 'keluar',
+                ]);
+                $categoryId = $newCat->id;
+            }
+        }
 
         $savingTarget->terkumpul += $nominal;
         $savingTarget->save();
 
-        $category = Category::firstOrCreate(
-            ['user_id' => $userId, 'nama' => 'Tabungan'],
-            ['tipe' => 'keluar']
-        );
-
         Transaction::create([
             'user_id' => $userId,
-            'category_id' => $category->id,
+            'category_id' => $categoryId,
             'deskripsi' => 'Setor Tabungan: ' . $savingTarget->nama_target,
             'tipe' => 'keluar',
             'nominal' => $nominal,
@@ -155,26 +202,45 @@ class SavingTargetController extends Controller
 
         $request->validate([
             'tarik_nominal' => 'required|numeric|min:1',
+            'category_id' => 'required',
+            'new_category_nama' => 'nullable|string|max:255',
         ]);
 
         $userId = Auth::id();
         $nominal = $request->tarik_nominal;
+        $categoryId = $request->category_id;
 
         if ($nominal > $savingTarget->terkumpul) {
             return back()->withErrors(['tarik_nominal' => 'Nominal penarikan melebihi saldo terkumpul saat ini!']);
         }
 
+        if ($categoryId === 'new') {
+            if (empty($request->new_category_nama)) {
+                return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+            }
+
+            $existingCategory = Category::where('user_id', $userId)
+                ->where('nama', $request->new_category_nama)
+                ->first();
+
+            if ($existingCategory) {
+                $categoryId = $existingCategory->id;
+            } else {
+                $newCat = Category::create([
+                    'user_id' => $userId,
+                    'nama' => $request->new_category_nama,
+                    'tipe' => 'masuk',
+                ]);
+                $categoryId = $newCat->id;
+            }
+        }
+
         $savingTarget->terkumpul -= $nominal;
         $savingTarget->save();
 
-        $category = Category::firstOrCreate(
-            ['user_id' => $userId, 'nama' => 'Penarikan Tabungan'],
-            ['tipe' => 'masuk']
-        );
-
         Transaction::create([
             'user_id' => $userId,
-            'category_id' => $category->id,
+            'category_id' => $categoryId,
             'deskripsi' => 'Penarikan Tabungan: ' . $savingTarget->nama_target,
             'tipe' => 'masuk',
             'nominal' => $nominal,
