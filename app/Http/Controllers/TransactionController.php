@@ -42,7 +42,7 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'nullable',
+            'category_id' => 'required',
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'tipe' => 'required|in:masuk,keluar',
@@ -53,7 +53,11 @@ class TransactionController extends Controller
         $categoryId = $request->category_id;
 
         // Jika user memilih opsi tambah kategori baru
-        if ($categoryId === 'new' && !empty($request->new_category_nama)) {
+        if ($categoryId === 'new') {
+            if (empty($request->new_category_nama)) {
+                return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+            }
+
             // Cek apakah kategori dengan nama tersebut sudah ada untuk user ini agar tidak duplikat
             $existingCategory = Category::where('user_id', Auth::id())
                 ->where('nama', $request->new_category_nama)
@@ -69,17 +73,13 @@ class TransactionController extends Controller
                 ]);
                 $categoryId = $newCat->id;
             }
-        } elseif ($categoryId === 'new' && empty($request->new_category_nama)) {
-            return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
-        } elseif (!empty($categoryId)) {
+        } else {
             // Validasi kategori sistem yang diblokir
             $category = Category::find($categoryId);
             $restrictedCategories = ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'];
             if ($category && in_array($category->nama, $restrictedCategories)) {
                 return back()->withErrors(['category_id' => 'Kategori sistem ini tidak dapat dipilih secara manual.']);
             }
-        } else {
-            $categoryId = null; // Tanpa Kategori
         }
 
         Transaction::create([

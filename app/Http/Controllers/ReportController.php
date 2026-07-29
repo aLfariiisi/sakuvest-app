@@ -14,7 +14,6 @@ class ReportController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        // Ambil transaksi berdasarkan bulan, tahun, diurutkan dari lama ke baru (asc)
         $transactions = Transaction::with('category')
             ->where('user_id', $userId)
             ->whereMonth('tanggal', $bulan)
@@ -23,22 +22,9 @@ class ReportController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $totalMasuk = $transactions->filter(function ($item) {
-            $isTabunganMasuk = str_starts_with($item->deskripsi, 'Penarikan Tabungan:') || 
-                               str_starts_with($item->deskripsi, 'Refund Tabungan') ||
-                               optional($item->category)->nama == 'Penarikan Tabungan' ||
-                               optional($item->category)->nama == 'Pencairan Tabungan Dihapus';
-            
-            return $item->tipe === 'masuk' && !$isTabunganMasuk;
-        })->sum('nominal');
-
-        $totalKeluar = $transactions->filter(function ($item) {
-            $isTabunganKeluar = str_starts_with($item->deskripsi, 'Setor Tabungan:') || 
-                                optional($item->category)->nama == 'Tabungan';
-            
-            return $item->tipe === 'keluar' && !$isTabunganKeluar;
-        })->sum('nominal');
-
+        // Hitung total masuk dan keluar secara menyeluruh (termasuk mutasi tabungan)
+        $totalMasuk = $transactions->where('tipe', 'masuk')->sum('nominal');
+        $totalKeluar = $transactions->where('tipe', 'keluar')->sum('nominal');
         $saldoBersih = $totalMasuk - $totalKeluar;
 
         return view('reports.index', compact('transactions', 'totalMasuk', 'totalKeluar', 'saldoBersih', 'bulan', 'tahun'));

@@ -20,23 +20,9 @@ class DashboardController extends Controller
 
         $allTransactions = Transaction::with('category')->where('user_id', $userId)->get();
 
-        // 1. Hitung total keseluruhan (Tanpa mutasi tabungan)
-        $totalPemasukan = $allTransactions->filter(function ($item) {
-            $isTabunganMasuk = str_starts_with($item->deskripsi, 'Penarikan Tabungan:') || 
-                               str_starts_with($item->deskripsi, 'Refund Tabungan') ||
-                               optional($item->category)->nama == 'Penarikan Tabungan' ||
-                               optional($item->category)->nama == 'Pencairan Tabungan Dihapus';
-            
-            return $item->tipe === 'masuk' && !$isTabunganMasuk;
-        })->sum('nominal');
-
-        $totalPengeluaran = $allTransactions->filter(function ($item) {
-            $isTabunganKeluar = str_starts_with($item->deskripsi, 'Setor Tabungan:') || 
-                                optional($item->category)->nama == 'Tabungan';
-            
-            return $item->tipe === 'keluar' && !$isTabunganKeluar;
-        })->sum('nominal');
-
+        // 1. Hitung total keseluruhan (Semua transaksi masuk dan keluar dihitung)
+        $totalPemasukan = $allTransactions->where('tipe', 'masuk')->sum('nominal');
+        $totalPengeluaran = $allTransactions->where('tipe', 'keluar')->sum('nominal');
         $saldo = $totalPemasukan - $totalPengeluaran;
 
         // 2. Ambil 5 Transaksi (Diurutkan dari lama ke baru / asc)
@@ -47,7 +33,7 @@ class DashboardController extends Controller
                             ->take(5)
                             ->get();
 
-        // 3. Data Grafik Per Bulan (ApexCharts) - Mapping 12 Bulan Penuh (Jan - Des) [Kompatibel PostgreSQL]
+        // 3. Data Grafik Per Bulan (ApexCharts) [Kompatibel PostgreSQL]
         $rawGrafik = Transaction::select(
                 DB::raw('EXTRACT(MONTH FROM tanggal) as bulan'),
                 DB::raw("SUM(CASE WHEN tipe = 'masuk' THEN nominal ELSE 0 END) as total_masuk"),
@@ -100,7 +86,6 @@ class DashboardController extends Controller
                 : 0;
         }
 
-        // Total Tabungan untuk Card ke-4
         $totalTabungan = $savingTargets->sum('terkumpul');
 
         return view('dashboard', compact(
