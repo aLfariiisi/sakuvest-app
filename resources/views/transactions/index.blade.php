@@ -1,5 +1,6 @@
 <x-app-layout>
     <div x-data="{ 
+        sidebarOpen: false,
         editModalOpen: false,
         trxId: '',
         deskripsi: '',

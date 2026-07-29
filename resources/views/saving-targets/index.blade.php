@@ -1,5 +1,6 @@
 <x-app-layout>
     <div x-data="{ 
+        sidebarOpen: false,
         withdrawModalOpen: false,
         targetId: '',
         namaTarget: '',

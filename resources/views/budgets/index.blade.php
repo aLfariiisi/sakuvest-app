@@ -5,7 +5,35 @@
 
         <!-- Konten Utama -->
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <x-navbar />
+            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
+            <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
+                <div class="flex items-center gap-3 w-full sm:w-96">
+                    <!-- Tombol Garis Tiga (Hamburger) untuk Membuka Sidebar -->
+                    <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+
+                    <div class="relative w-full">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" placeholder="Cari transaksi atau data..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-bold shadow-sm shadow-red-500/20">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <p class="text-sm font-semibold text-slate-800 leading-tight">{{ Auth::user()->name }}</p>
+                            <p class="text-xs text-slate-500">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
             <main class="p-8 space-y-6 flex-1">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
