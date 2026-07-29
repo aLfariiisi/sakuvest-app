@@ -39,11 +39,11 @@ class DashboardController extends Controller
 
         $saldo = $totalPemasukan - $totalPengeluaran;
 
-        // 2. Ambil 5 Transaksi Terbaru
+        // 2. Ambil 5 Transaksi (Diurutkan dari lama ke baru / asc)
         $transaksiTerbaru = Transaction::with('category')
                             ->where('user_id', $userId)
-                            ->orderBy('tanggal', 'desc')
-                            ->orderBy('id', 'desc')
+                            ->orderBy('tanggal', 'asc')
+                            ->orderBy('created_at', 'asc')
                             ->take(5)
                             ->get();
 

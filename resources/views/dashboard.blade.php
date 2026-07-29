@@ -139,13 +139,14 @@
                                 <a href="{{ route('transactions.index') }}" class="text-xs font-semibold text-red-500 hover:underline">Lihat Semua</a>
                             </div>
                             <div class="overflow-x-auto w-full">
-                                <table class="w-full text-left border-collapse min-w-[500px]">
+                                <table class="w-full text-left border-collapse min-w-[600px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-xs font-semibold text-slate-400 uppercase border-b border-slate-200">
                                             <th class="py-3 px-4 rounded-l-xl">Deskripsi</th>
                                             <th class="py-3 px-4">Kategori</th>
                                             <th class="py-3 px-4">Tanggal</th>
-                                            <th class="py-3 px-4 text-right rounded-r-xl">Nominal</th>
+                                            <th class="py-3 px-4 text-right">Uang Masuk</th>
+                                            <th class="py-3 px-4 text-right rounded-r-xl">Uang Keluar</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-sm divide-y divide-slate-100">
@@ -158,13 +159,28 @@
                                                     </span>
                                                 </td>
                                                 <td class="py-4 px-4 text-slate-400 text-xs">{{ date('d M Y', strtotime($trx->tanggal)) }}</td>
-                                                <td class="py-4 px-4 text-right font-bold {{ $trx->tipe == 'masuk' ? 'text-emerald-600' : 'text-red-500' }}">
-                                                    {{ $trx->tipe == 'masuk' ? '+' : '-' }} Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                                
+                                                <!-- Uang Masuk -->
+                                                <td class="py-4 px-4 text-right font-bold text-emerald-600">
+                                                    @if($trx->tipe == 'masuk')
+                                                        Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                                    @else
+                                                        <span class="text-slate-300 font-normal">-</span>
+                                                    @endif
+                                                </td>
+
+                                                <!-- Uang Keluar -->
+                                                <td class="py-4 px-4 text-right font-bold text-red-500">
+                                                    @if($trx->tipe == 'keluar')
+                                                        Rp {{ number_format($trx->nominal, 0, ',', '.') }}
+                                                    @else
+                                                        <span class="text-slate-300 font-normal">-</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="py-8 text-center text-slate-400 text-sm">Belum ada transaksi tercatat.</td>
+                                                <td colspan="5" class="py-8 text-center text-slate-400 text-sm">Belum ada transaksi tercatat.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

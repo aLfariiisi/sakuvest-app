@@ -14,16 +14,15 @@ class ReportController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        // Ambil transaksi berdasarkan bulan, tahun, dan diurutkan dari yang terbaru (tanggal & jam)
+        // Ambil transaksi berdasarkan bulan, tahun, diurutkan dari lama ke baru (asc)
         $transactions = Transaction::with('category')
             ->where('user_id', $userId)
             ->whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('created_at', 'asc')
             ->get();
 
-        // Hitung ringkasan statistik dengan mengecualikan mutasi tabungan
         $totalMasuk = $transactions->filter(function ($item) {
             $isTabunganMasuk = str_starts_with($item->deskripsi, 'Penarikan Tabungan:') || 
                                str_starts_with($item->deskripsi, 'Refund Tabungan') ||
