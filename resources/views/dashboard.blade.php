@@ -8,6 +8,11 @@
             <!-- Navbar -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
+                    <!-- Tombol Garis Tiga Sidebar Mobile -->
+                    <button @click="sidebarOpen = true; window.dispatchEvent(new CustomEvent('toggle-sidebar'))" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+
                     <div class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
