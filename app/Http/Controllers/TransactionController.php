@@ -25,8 +25,16 @@ class TransactionController extends Controller
             $query->whereYear('tanggal', $request->tahun);
         }
     
-        $transactions = $query->orderBy('tanggal', 'desc')->get();
-        $categories = Category::where('user_id', $userId)->get();
+        // 1. Urutkan transaksi berdasarkan tanggal dan waktu pembuatan terbaru (jam/menit)
+        $transactions = $query->orderBy('tanggal', 'desc')
+                              ->orderBy('created_at', 'desc')
+                              ->get();
+
+        // 2. Saring kategori agar kategori otomatis tabungan tidak muncul di pilihan form tambah transaksi
+        $categories = Category::where('user_id', $userId)
+            ->whereNotIn('nama', ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'])
+            ->get();
+
         $savingTargets = SavingTarget::where('user_id', $userId)->get();
         
         return view('transactions.index', compact('transactions', 'categories', 'savingTargets'));
@@ -35,12 +43,19 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'tipe' => 'required|in:masuk,keluar',
             'nominal' => 'required|numeric|min:0',
         ]);
+
+        // Validasi ekstra: Pastikan user tidak sengaja memasukkan kategori sistem yang diblokir lewat celah request
+        $category = Category::find($request->category_id);
+        $restrictedCategories = ['Tabungan', 'Penarikan Tabungan', 'Pencairan Tabungan Dihapus'];
+        if ($category && in_array($category->nama, $restrictedCategories)) {
+            return back()->withErrors(['category_id' => 'Kategori sistem ini tidak dapat dipilih secara manual.']);
+        }
 
         Transaction::create([
             'user_id' => Auth::id(),
@@ -71,7 +86,7 @@ class TransactionController extends Controller
         }
 
         $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'tipe' => 'required|in:masuk,keluar',
