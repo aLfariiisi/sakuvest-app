@@ -40,8 +40,15 @@ RUN sed -i -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-availa
 # Izinkan mod_rewrite Apache untuk routing Laravel
 RUN a2enmod rewrite
 
+# Salin file entrypoint dan beri izin eksekusi
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Beri izin akses folder storage dan bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
+
+# Jalankan entrypoint saat container aktif
+ENTRYPOINT ["docker-entrypoint.sh"]
