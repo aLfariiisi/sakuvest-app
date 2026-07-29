@@ -22,9 +22,23 @@ class ReportController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        // Hitung ringkasan statistik
-        $totalMasuk = $transactions->where('tipe', 'masuk')->sum('nominal');
-        $totalKeluar = $transactions->where('tipe', 'keluar')->sum('nominal');
+        // Hitung ringkasan statistik dengan mengecualikan mutasi tabungan
+        $totalMasuk = $transactions->filter(function ($item) {
+            $isTabunganMasuk = str_starts_with($item->deskripsi, 'Penarikan Tabungan:') || 
+                               str_starts_with($item->deskripsi, 'Refund Tabungan') ||
+                               optional($item->category)->nama == 'Penarikan Tabungan' ||
+                               optional($item->category)->nama == 'Pencairan Tabungan Dihapus';
+            
+            return $item->tipe === 'masuk' && !$isTabunganMasuk;
+        })->sum('nominal');
+
+        $totalKeluar = $transactions->filter(function ($item) {
+            $isTabunganKeluar = str_starts_with($item->deskripsi, 'Setor Tabungan:') || 
+                                optional($item->category)->nama == 'Tabungan';
+            
+            return $item->tipe === 'keluar' && !$isTabunganKeluar;
+        })->sum('nominal');
+
         $saldoBersih = $totalMasuk - $totalKeluar;
 
         return view('reports.index', compact('transactions', 'totalMasuk', 'totalKeluar', 'saldoBersih', 'bulan', 'tahun'));
