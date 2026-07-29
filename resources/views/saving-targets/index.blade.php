@@ -17,7 +17,7 @@
         <x-sidebar />
 
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Navbar -->
+            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
                     <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
@@ -88,27 +88,6 @@
                                 <input type="number" name="terkumpul" placeholder="Contoh: 500000" value="0" required class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
                             </div>
 
-                            <!-- Pilihan Kategori untuk Setoran Awal -->
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori Transaksi Setoran</label>
-                                <select name="category_id" id="store_category_select" required class="w-full rounded-xl border-slate-200 text-sm py-3 px-4" onchange="autoSetStoreTipe(this)">
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}" data-tipe="{{ $cat->tipe }}">
-                                            {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
-                                        </option>
-                                    @endforeach
-                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
-                                </select>
-
-                                <!-- Input Kategori Baru -->
-                                <div id="store_new_category_container" class="mt-3" style="display: none;">
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kategori Baru</label>
-                                    <input type="text" name="new_category_nama" id="store_new_category_input" placeholder="Contoh: Tabungan, Investasi" class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 bg-red-50/30">
-                                </div>
-                            </div>
-
-                            <input type="hidden" name="tipe" value="keluar">
-
                             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-5 rounded-xl text-sm font-semibold transition">
                                 Simpan Target Tabungan
                             </button>
@@ -148,20 +127,12 @@
                                             <div class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $target->progress }}%"></div>
                                         </div>
 
-                                        <form action="{{ route('saving-targets.deposit', $target->id) }}" method="POST" class="space-y-2">
+                                        <form action="{{ route('saving-targets.deposit', $target->id) }}" method="POST" class="flex gap-2">
                                             @csrf
-                                            <div class="flex gap-2">
-                                                <input type="number" name="tambah_nominal" placeholder="Nominal setor..." required class="w-full rounded-xl border-slate-200 text-xs py-2 px-3 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
-                                                    Setor
-                                                </button>
-                                            </div>
-                                            <!-- Pilihan Kategori Setor -->
-                                            <select name="category_id" required class="w-full rounded-xl border-slate-200 text-xs py-1.5 px-2 bg-slate-50">
-                                                @foreach($categories as $cat)
-                                                    <option value="{{ $cat->id }}">{{ $cat->nama }} ({{ ucfirst($cat->tipe) }})</option>
-                                                @endforeach
-                                            </select>
+                                            <input type="number" name="tambah_nominal" placeholder="Nominal setor..." required class="w-full rounded-xl border-slate-200 text-xs py-2 px-3 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
+                                                Setor
+                                            </button>
                                         </form>
                                     </div>
                                 </x-card>
@@ -190,15 +161,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nominal yang Ingin Ditarik (Rp)</label>
                         <input type="number" name="tarik_nominal" x-model="tarikNominal" placeholder="Contoh: 150000" :max="terkumpul" min="1" required class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori Transaksi Penarikan</label>
-                        <select name="category_id" required class="w-full rounded-xl border-slate-200 text-sm py-2 px-3 bg-slate-50">
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->nama }} ({{ ucfirst($cat->tipe) }})</option>
-                            @endforeach
-                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Dana yang ditarik akan otomatis dikembalikan ke saldo dompet utama.</p>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">
@@ -209,27 +172,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const storeCategorySelect = document.getElementById('store_category_select');
-            if (storeCategorySelect) {
-                autoSetStoreTipe(storeCategorySelect);
-            }
-        });
-
-        function autoSetStoreTipe(selectElement) {
-            const container = document.getElementById('store_new_category_container');
-            const input = document.getElementById('store_new_category_input');
-
-            if (selectElement.value === 'new') {
-                container.style.display = 'block';
-                input.required = true;
-            } else {
-                container.style.display = 'none';
-                input.required = false;
-                input.value = '';
-            }
-        }
-    </script>
 </x-app-layout>
