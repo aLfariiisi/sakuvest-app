@@ -47,49 +47,23 @@
                     </div>
                 @endif
 
-                @if($errors->any())
-                    <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-                        <ul class="list-disc list-inside">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Form Tambah / Pilih Kategori -->
+                    <!-- Form Tambah Kategori -->
                     <x-card class="h-fit">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Tambah Kategori Baru</h3>
                         <form action="{{ route('categories.store') }}" method="POST" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Pilih Kategori</label>
-                                <select name="existing_category_id" id="category_select" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="toggleCategoryInput(this)">
-                                    <option value="new" class="font-bold text-red-600" selected>+ Tambah Kategori Baru...</option>
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}" data-nama="{{ $cat->nama }}" data-tipe="{{ $cat->tipe }}">
-                                            {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Kategori</label>
+                                <input type="text" name="nama" placeholder="Contoh: Makanan, Gaji, Transport" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
                             </div>
-
-                            <!-- Input Nama Kategori Baru (Muncul jika opsi tambah baru dipilih) -->
-                            <div id="new_category_container">
-                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Kategori Baru</label>
-                                <input type="text" name="nama" id="new_category_input" placeholder="Contoh: Makanan, Gaji, Transport" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
-                            </div>
-
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tipe Kategori</label>
-                                <select name="tipe" id="tipe_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800">
+                                <select name="tipe" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
                                     <option value="masuk">Pemasukan (Masuk)</option>
                                     <option value="keluar">Pengeluaran (Keluar)</option>
                                 </select>
-                                <p class="text-xs text-slate-400 mt-1" id="tipe_info">Pilih tipe kategori baru.</p>
                             </div>
-
                             <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 px-5 rounded-xl text-sm font-semibold shadow-sm shadow-red-500/25 transition">
                                 Simpan Kategori
                             </button>
@@ -140,39 +114,4 @@
             </main>
         </div>
     </div>
-
-    <script>
-        function toggleCategoryInput(selectElement) {
-            const selectedValue = selectElement.value;
-            const newCatContainer = document.getElementById('new_category_container');
-            const newCatInput = document.getElementById('new_category_input');
-            const tipeSelect = document.getElementById('tipe_select');
-            const tipeInfo = document.getElementById('tipe_info');
-
-            if (selectedValue === 'new') {
-                newCatContainer.style.display = 'block';
-                newCatInput.required = true;
-                newCatInput.value = '';
-
-                // Buka pilihan tipe agar bisa diatur manual untuk kategori baru
-                tipeSelect.disabled = false;
-                tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
-                tipeInfo.innerText = "Pilih tipe kategori baru.";
-            } else {
-                newCatContainer.style.display = 'none';
-                newCatInput.required = false;
-
-                const selectedOption = selectElement.options[selectElement.selectedIndex];
-                const kategoriNama = selectedOption.getAttribute('data-nama');
-                const kategoriTipe = selectedOption.getAttribute('data-tipe');
-
-                // Masukkan nama kategori yang dipilih ke input tersembunyi/input teks agar tetap terbaca backend saat submit
-                newCatInput.value = kategoriNama;
-                tipeSelect.value = kategoriTipe;
-                tipeSelect.disabled = true;
-                tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
-                tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori yang dipilih.";
-            }
-        }
-    </script>
 </x-app-layout>

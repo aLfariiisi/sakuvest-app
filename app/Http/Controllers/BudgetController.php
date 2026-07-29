@@ -49,26 +49,53 @@ class BudgetController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required',
             'limit_nominal' => 'required|numeric|min:1',
             'bulan' => 'required|numeric|between:1,12',
             'tahun' => 'required|numeric|digits:4',
+            'new_category_nama' => 'nullable|string|max:255',
         ]);
 
+        $userId = Auth::id();
+        $categoryId = $request->category_id;
+
+        // Jika user memilih opsi tambah kategori baru
+        if ($categoryId === 'new') {
+            if (empty($request->new_category_nama)) {
+                return back()->withErrors(['new_category_nama' => 'Nama kategori baru wajib diisi.'])->withInput();
+            }
+
+            // Cek apakah kategori dengan nama tersebut sudah ada
+            $existingCategory = Category::where('user_id', $userId)
+                ->where('nama', $request->new_category_nama)
+                ->first();
+
+            if ($existingCategory) {
+                $categoryId = $existingCategory->id;
+            } else {
+                $newCat = Category::create([
+                    'user_id' => $userId,
+                    'nama' => $request->new_category_nama,
+                    'tipe' => 'keluar', // Anggaran dikhususkan untuk pengeluaran
+                ]);
+                $categoryId = $newCat->id;
+            }
+        }
+
         // Cek apakah anggaran untuk kategori dan bulan tersebut sudah pernah dibuat
-        $exists = Budget::where('user_id', Auth::id())
-            ->where('category_id', $request->category_id)
+        $exists = Budget::where('user_id', $userId)
+            ->where('category_id', $categoryId)
             ->where('bulan', $request->bulan)
             ->where('tahun', $request->tahun)
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['category_id' => 'Anggaran untuk kategori ini pada bulan tersebut sudah ada.']);
+            return back()->withErrors(['category_id' => 'Anggaran untuk kategori ini pada bulan tersebut sudah ada.'])->withInput();
         }
 
         Budget::create([
-            'user_id' => Auth::id(),
-            'category_id' => $request->category_id,
+            'user_id' => $userId,
+            'category_id' => $categoryId,
             'limit_nominal' => $request->limit_nominal,
             'bulan' => $request->bulan,
             'tahun' => $request->tahun,

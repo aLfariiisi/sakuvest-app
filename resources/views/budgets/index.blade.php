@@ -90,12 +90,19 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori (Pengeluaran)</label>
-                                <select name="category_id" required class="w-full rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800">
-                                    <option value="">Pilih Kategori</option>
+                                <select name="category_id" id="category_select" required class="w-full rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800" onchange="toggleBudgetCategoryInput(this)">
+                                    <option value="" disabled selected>Pilih Kategori</option>
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}">{{ $cat->nama }}</option>
                                     @endforeach
+                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
                                 </select>
+
+                                <!-- Input Muncul Jika Pilih Kategori Baru -->
+                                <div id="new_category_container" class="mt-3" style="display: none;">
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kategori Baru</label>
+                                    <input type="text" name="new_category_nama" id="new_category_input" placeholder="Contoh: Belanja Bulanan" class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 bg-red-50/30">
+                                </div>
                             </div>
 
                             <div>
@@ -153,4 +160,22 @@
             </main>
         </div>
     </div>
+
+    <script>
+        function toggleBudgetCategoryInput(selectElement) {
+            const selectedValue = selectElement.value;
+            const newCatContainer = document.getElementById('new_category_container');
+            const newCatInput = document.getElementById('new_category_input');
+
+            if (selectedValue === 'new') {
+                newCatContainer.style.display = 'block';
+                newCatInput.required = true;
+                newCatInput.value = '';
+            } else {
+                newCatContainer.style.display = 'none';
+                newCatInput.required = false;
+                newCatInput.value = '';
+            }
+        }
+    </script>
 </x-app-layout>
