@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Install ekstensi yang dibutuhkan Laravel
+# Install ekstensi yang dibutuhkan Laravel (termasuk libpq-dev untuk PostgreSQL)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -13,13 +13,14 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    libpq-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install ekstensi PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install ekstensi PHP (ditambah pdo_pgsql dan pgsql untuk Supabase)
+RUN docker-php-ext-install pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
