@@ -92,8 +92,8 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
-                                <select name="category_id" id="category_select" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="autoSetTipe(this)">
-                                    <option value="">Tanpa Kategori</option>
+                                <select name="category_id" id="category_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="autoSetTipe(this)">
+                                    <!-- Opsi Tanpa Kategori Telah Dihapus -->
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}" data-tipe="{{ $cat->tipe }}">
                                             {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
@@ -111,12 +111,12 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tipe Transaksi</label>
-                                <select id="tipe_select" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800" onchange="manualSetTipe(this)">
+                                <select id="tipe_select" class="w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed" disabled>
                                     <option value="masuk">Pemasukan (Masuk)</option>
                                     <option value="keluar">Pengeluaran (Keluar)</option>
                                 </select>
                                 <input type="hidden" name="tipe" id="tipe_hidden" value="masuk">
-                                <p class="text-xs text-slate-400 mt-1" id="tipe_info">Pilih kategori untuk otomatis, atau pilih manual jika tanpa kategori.</p>
+                                <p class="text-xs text-slate-400 mt-1" id="tipe_info">Tipe terkunci otomatis mengikuti kategori.</p>
                             </div>
 
                             <div>
@@ -231,7 +231,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori</label>
-                        <select name="category_id" x-model="categoryId" class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
+                        <select name="category_id" x-model="categoryId" required class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->nama }} ({{ ucfirst($cat->tipe) }})</option>
                             @endforeach
@@ -266,10 +266,18 @@
     </div>
 
     <script>
+        // Jalankan otomatis saat halaman dimuat jika ada kategori pertama yang terpilih secara default
+        document.addEventListener("DOMContentLoaded", function() {
+            const categorySelect = document.getElementById('category_select');
+            if (categorySelect && categorySelect.options.length > 0) {
+                autoSetTipe(categorySelect);
+            }
+        });
+
         function autoSetTipe(categorySelect) {
             const selectedValue = categorySelect.value;
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-            const tipe = selectedOption.getAttribute('data-tipe');
+            const tipe = selectedOption ? selectedOption.getAttribute('data-tipe') : null;
             
             const tipeSelect = document.getElementById('tipe_select');
             const tipeHidden = document.getElementById('tipe_hidden');
@@ -297,11 +305,6 @@
                     tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
                     tipeHidden.value = tipe;
                     tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori.";
-                } else {
-                    tipeSelect.disabled = false;
-                    tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
-                    tipeHidden.value = tipeSelect.value;
-                    tipeInfo.innerText = "Silakan pilih tipe transaksi secara manual karena tanpa kategori.";
                 }
             }
         }
