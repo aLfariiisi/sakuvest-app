@@ -22,9 +22,18 @@ class ReportController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Hitung total masuk dan keluar secara menyeluruh (termasuk mutasi tabungan)
-        $totalMasuk = $transactions->where('tipe', 'masuk')->sum('nominal');
-        $totalKeluar = $transactions->where('tipe', 'keluar')->sum('nominal');
+        // Kecualikan transaksi mutasi tabungan dari rekap total pemasukan & pengeluaran laporan
+        $operationalTransactions = $transactions->reject(function ($trx) {
+            return str_starts_with($trx->deskripsi, 'Setor Tabungan:') || 
+                   str_starts_with($trx->deskripsi, 'Penarikan Tabungan:') || 
+                   str_starts_with($trx->deskripsi, 'Refund Tabungan') ||
+                   optional($trx->category)->nama == 'Tabungan' ||
+                   optional($trx->category)->nama == 'Penarikan Tabungan' ||
+                   optional($trx->category)->nama == 'Pencairan Tabungan Dihapus';
+        });
+
+        $totalMasuk = $operationalTransactions->where('tipe', 'masuk')->sum('nominal');
+        $totalKeluar = $operationalTransactions->where('tipe', 'keluar')->sum('nominal');
         $saldoBersih = $totalMasuk - $totalKeluar;
 
         return view('reports.index', compact('transactions', 'totalMasuk', 'totalKeluar', 'saldoBersih', 'bulan', 'tahun'));
