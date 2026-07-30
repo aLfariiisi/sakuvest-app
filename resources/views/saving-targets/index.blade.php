@@ -17,19 +17,20 @@
         <x-sidebar />
 
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
+            <!-- Navbar -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
                     <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
 
-                    <div class="relative w-full">
+                    <!-- Kolom Pencarian yang Sudah Diperbarui -->
+                    <form action="{{ url()->current() }}" method="GET" class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" placeholder="Cari transaksi atau data..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
-                    </div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari target tabungan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
+                    </form>
                 </div>
 
                 <div class="flex items-center gap-4 shrink-0">
@@ -100,20 +101,23 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @forelse($savingTargets as $target)
-                                <x-card class="flex flex-col justify-between space-y-4">
+                                <x-card class="flex flex-col justify-between space-y-4 relative overflow-hidden">
                                     <div>
                                         <div class="flex justify-between items-start mb-2">
-                                            <h4 class="font-bold text-slate-800 text-base">{{ $target->nama_target }}</h4>
-                                            <div class="flex items-center gap-2">
-                                                <button type="button" @click="openWithdrawModal({{ json_encode($target) }})" class="text-indigo-600 hover:text-indigo-800 transition text-xs font-semibold">Tarik</button>
-                                                <form action="{{ route('saving-targets.destroy', $target->id) }}" method="POST" onsubmit="return confirm('Hapus target tabungan ini? Sisa saldo akan dikembalikan ke dompet utama.')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-slate-400 hover:text-red-500 transition text-xs font-semibold">Hapus</button>
-                                                </form>
+                                            <div class="flex flex-col">
+                                                <h4 class="font-bold text-slate-800 text-base">{{ $target->nama_target }}</h4>
+                                                @if($target->is_achieved)
+                                                    <span class="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 w-fit">
+                                                        ✨ TERCAPAI
+                                                    </span>
+                                                @endif
                                             </div>
+                                            <!-- Tombol Hapus Dihilangkan, Diganti Tombol Tarik yang Lebih Jelas -->
+                                            <button type="button" @click="openWithdrawModal({{ json_encode($target) }})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition text-xs font-bold px-3 py-1.5 rounded-lg border border-indigo-100">
+                                                Tarik Dana
+                                            </button>
                                         </div>
-                                        <p class="text-xs text-slate-500 font-medium">
+                                        <p class="text-xs text-slate-500 font-medium mt-3">
                                             Terkumpul: <strong class="text-slate-700">Rp {{ number_format($target->terkumpul, 0, ',', '.') }}</strong> / Rp {{ number_format($target->target_nominal, 0, ',', '.') }}
                                         </p>
                                     </div>
@@ -127,13 +131,20 @@
                                             <div class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $target->progress }}%"></div>
                                         </div>
 
-                                        <form action="{{ route('saving-targets.deposit', $target->id) }}" method="POST" class="flex gap-2">
-                                            @csrf
-                                            <input type="number" name="tambah_nominal" placeholder="Nominal setor..." required class="w-full rounded-xl border-slate-200 text-xs py-2 px-3 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
-                                                Setor
-                                            </button>
-                                        </form>
+                                        <!-- Hanya munculkan form setor jika target belum 100% tercapai (Opsional, tapi bagus untuk UX) -->
+                                        @if(!$target->is_achieved)
+                                            <form action="{{ route('saving-targets.deposit', $target->id) }}" method="POST" class="flex gap-2">
+                                                @csrf
+                                                <input type="number" name="tambah_nominal" placeholder="Nominal setor..." required class="w-full rounded-xl border-slate-200 text-xs py-2 px-3 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold shrink-0 transition">
+                                                    Setor
+                                                </button>
+                                            </form>
+                                        @else
+                                            <p class="text-[11px] text-emerald-600 font-medium italic bg-emerald-50 py-2 px-3 rounded-xl border border-emerald-100 text-center">
+                                                Target sudah terpenuhi! Hebat! 🎉
+                                            </p>
+                                        @endif
                                     </div>
                                 </x-card>
                             @empty
@@ -161,7 +172,10 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nominal yang Ingin Ditarik (Rp)</label>
                         <input type="number" name="tarik_nominal" x-model="tarikNominal" placeholder="Contoh: 150000" :max="terkumpul" min="1" required class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
-                        <p class="text-[11px] text-slate-400 mt-1">Dana yang ditarik akan otomatis dikembalikan ke saldo dompet utama.</p>
+                        <p class="text-[11px] text-slate-400 mt-2 font-medium bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            💡 Dana ditarik akan dikembalikan ke dompet utama. <br>
+                            <span class="text-red-500">Jika ditarik semua, target tabungan ini akan dihapus otomatis.</span>
+                        </p>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">

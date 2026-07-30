@@ -10,15 +10,22 @@ use Illuminate\Support\Facades\Auth;
 
 class SavingTargetController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $savingTargets = SavingTarget::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
+        $userId = Auth::id();
+        $query = SavingTarget::where('user_id', $userId);
+
+        if ($request->has('search') && $request->search != '') {
+            $query->where('nama_target', 'like', '%' . $request->search . '%');
+        }
+
+        $savingTargets = $query->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($target) {
                 $target->progress = $target->target_nominal > 0 
                     ? min(round(($target->terkumpul / $target->target_nominal) * 100, 2), 100) 
                     : 0;
+                $target->is_achieved = $target->terkumpul >= $target->target_nominal;
                 return $target;
             });
 
@@ -85,34 +92,7 @@ class SavingTargetController extends Controller
         return redirect()->route('saving-targets.index')->with('success', 'Target tabungan berhasil diperbarui!');
     }
 
-    public function destroy(SavingTarget $savingTarget)
-    {
-        if ($savingTarget->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $userId = Auth::id();
-
-        if ($savingTarget->terkumpul > 0) {
-            $categoryMasuk = Category::firstOrCreate(
-                ['user_id' => $userId, 'nama' => 'Pencairan Tabungan Dihapus'],
-                ['tipe' => 'masuk']
-            );
-
-            Transaction::create([
-                'user_id' => $userId,
-                'category_id' => $categoryMasuk->id,
-                'deskripsi' => 'Refund Tabungan Dihapus: ' . $savingTarget->nama_target,
-                'tipe' => 'masuk',
-                'nominal' => $savingTarget->terkumpul,
-                'tanggal' => date('Y-m-d'),
-            ]);
-        }
-
-        $savingTarget->delete();
-
-        return redirect()->route('saving-targets.index')->with('success', 'Target tabungan dihapus dan sisa dana terkumpul dikembalikan ke saldo utama!');
-    }
+    // Fungsi destroy (hapus manual) dihilangkan sesuai permintaan.
 
     public function deposit(Request $request, SavingTarget $savingTarget)
     {
@@ -164,8 +144,17 @@ class SavingTargetController extends Controller
             return back()->withErrors(['tarik_nominal' => 'Nominal penarikan melebihi saldo terkumpul saat ini!']);
         }
 
-        $savingTarget->terkumpul -= $nominal;
-        $savingTarget->save();
+        $sisaTerkumpul = $savingTarget->terkumpul - $nominal;
+
+        // Jika ditarik semua, hapus target. Jika belum, kurangi saldonya.
+        if ($sisaTerkumpul <= 0) {
+            $savingTarget->delete();
+            $pesanSukses = 'Seluruh saldo berhasil ditarik dan target tabungan otomatis dihapus!';
+        } else {
+            $savingTarget->terkumpul = $sisaTerkumpul;
+            $savingTarget->save();
+            $pesanSukses = 'Berhasil melakukan pengambilan saldo! Dana kembali masuk ke saldo utama.';
+        }
 
         $category = Category::firstOrCreate(
             ['user_id' => $userId, 'nama' => 'Penarikan Tabungan'],
@@ -181,6 +170,6 @@ class SavingTargetController extends Controller
             'tanggal' => date('Y-m-d'),
         ]);
 
-        return redirect()->route('saving-targets.index')->with('success', 'Berhasil melakukan pengambilan saldo! Dana kembali masuk ke saldo utama.');
+        return redirect()->route('saving-targets.index')->with('success', $pesanSukses);
     }
 }
