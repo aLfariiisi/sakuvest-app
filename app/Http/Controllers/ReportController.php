@@ -49,6 +49,11 @@ class ReportController extends Controller
             });
         }
 
+        // CEK JIKA USER KLIK TOMBOL "DOWNLOAD EXCEL"
+        if ($request->has('export') && $request->export === 'excel') {
+            return $this->exportToExcel($transactions, $bulan, $tahun);
+        }
+
         // Kecualikan transaksi mutasi tabungan dari rekap TOTAL laporan agar akuntansi akurat
         $operationalTransactions = $transactions->reject(function ($trx) {
             return str_starts_with($trx->deskripsi, 'Setor Tabungan:') || 
@@ -64,5 +69,50 @@ class ReportController extends Controller
         $saldoBersih = $totalMasuk - $totalKeluar;
 
         return view('reports.index', compact('transactions', 'totalMasuk', 'totalKeluar', 'saldoBersih', 'bulan', 'tahun', 'sort'));
+    }
+
+    /**
+     * Fungsi untuk menghasilkan file CSV yang bisa dibuka langsung di Excel
+     */
+    private function exportToExcel($transactions, $bulan, $tahun)
+    {
+        $fileName = 'Laporan_Keuangan_' . $tahun . '_' . str_pad($bulan, 2, '0', STR_PAD_LEFT) . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($transactions) {
+            $file = fopen('php://output', 'w');
+            
+            // Tambahkan BOM (Byte Order Mark) agar Excel otomatis mendeteksi format UTF-8
+            fputs($file, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+            // Header Kolom di Excel
+            fputcsv($file, ['Tanggal', 'Deskripsi', 'Kategori', 'Tipe', 'Uang Masuk (Rp)', 'Uang Keluar (Rp)']);
+
+            // Isi Data
+            foreach ($transactions as $trx) {
+                $masuk = $trx->tipe == 'masuk' ? $trx->nominal : 0;
+                $keluar = $trx->tipe == 'keluar' ? $trx->nominal : 0;
+                
+                fputcsv($file, [
+                    date('d M Y', strtotime($trx->tanggal)),
+                    $trx->deskripsi,
+                    $trx->category ? $trx->category->nama : '-',
+                    ucfirst($trx->tipe),
+                    $masuk,
+                    $keluar
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

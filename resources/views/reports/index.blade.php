@@ -1,25 +1,21 @@
 <x-app-layout>
     <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-[#F8FAFC] overflow-x-hidden w-full">
-        <!-- Sidebar -->
         <x-sidebar />
 
-        <!-- Konten Utama -->
         <div class="flex-1 w-full md:ml-[280px] flex flex-col min-h-screen overflow-x-hidden">
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
-                    <!-- Tombol Garis Tiga Sidebar Mobile -->
                     <button @click="sidebarOpen = true; window.dispatchEvent(new CustomEvent('toggle-sidebar'))" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
 
-                    <!-- Kolom Pencarian (Sudah diubah menjadi form agar berfungsi) -->
+                    <!-- Kolom Pencarian Laporan -->
                     <form action="{{ route('reports.index') }}" method="GET" class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari transaksi laporan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
                         
-                        <!-- Mempertahankan filter lain saat melakukan pencarian -->
                         <input type="hidden" name="bulan" value="{{ $bulan }}">
                         <input type="hidden" name="tahun" value="{{ $tahun }}">
                         <input type="hidden" name="sort" value="{{ $sort ?? 'tanggal_asc' }}">
@@ -41,14 +37,14 @@
             </header>
 
             <main class="p-4 sm:p-8 space-y-6 flex-1 w-full max-w-full overflow-x-hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-900">Laporan Keuangan</h1>
                         <p class="text-sm text-slate-500 mt-0.5">Ringkasan transaksi dan rekapitulasi bulanan Anda.</p>
                     </div>
 
-                    <!-- Filter Bulan, Tahun, Urutan & Tombol Cetak -->
-                    <form method="GET" action="{{ route('reports.index') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <!-- Filter & Tombol Cetak / Export -->
+                    <form method="GET" action="{{ route('reports.index') }}" class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                         @if(request('search'))
                             <input type="hidden" name="search" value="{{ request('search') }}">
                         @endif
@@ -66,22 +62,30 @@
                             <option value="2025" {{ $tahun == '2025' ? 'selected' : '' }}>2025</option>
                         </select>
 
-                        <!-- Dropdown Sort (Urutkan Berdasarkan) -->
                         <select name="sort" class="rounded-xl border border-slate-200 text-xs py-2 px-3 focus:ring-red-500 focus:border-red-500 bg-white text-slate-800 font-medium cursor-pointer">
                             <option value="tanggal_asc" {{ $sort == 'tanggal_asc' ? 'selected' : '' }}>Waktu (Lama - Baru)</option>
                             <option value="tanggal_desc" {{ $sort == 'tanggal_desc' ? 'selected' : '' }}>Waktu (Baru - Lama)</option>
-                            <option value="kategori" {{ $sort == 'kategori' ? 'selected' : '' }}>Berdasarkan Kategori (A-Z)</option>
+                            <option value="kategori" {{ $sort == 'kategori' ? 'selected' : '' }}>Kategori (A-Z)</option>
                             <option value="terbesar_masuk" {{ $sort == 'terbesar_masuk' ? 'selected' : '' }}>Uang Masuk Terbesar</option>
                             <option value="terbesar_keluar" {{ $sort == 'terbesar_keluar' ? 'selected' : '' }}>Uang Keluar Terbesar</option>
                         </select>
 
-                        <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
-                            Tampilkan
-                        </button>
-                        
-                        <button type="button" onclick="window.print()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
-                            Cetak Laporan
-                        </button>
+                        <!-- Tombol Aksi -->
+                        <div class="flex items-center gap-2 ml-auto xl:ml-0 mt-2 xl:mt-0">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
+                                Filter
+                            </button>
+                            
+                            <!-- Tombol Cetak PDF/Print Biasa -->
+                            <button type="button" onclick="window.print()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
+                                Print
+                            </button>
+    
+                            <!-- Tombol Export Excel -->
+                            <button type="submit" name="export" value="excel" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
+                                Excel
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -101,7 +105,7 @@
                     </x-card>
                 </div>
 
-                <!-- Tabel Rincian Transaksi Periode Ini -->
+                <!-- Tabel Rincian Transaksi -->
                 <x-card class="w-full overflow-hidden">
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Rincian Transaksi Periode Ini</h3>
                     <div class="overflow-x-auto w-full">
