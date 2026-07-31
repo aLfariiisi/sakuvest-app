@@ -1,4 +1,32 @@
 <x-app-layout>
+
+    <style>
+        @media print {
+            /* Sembunyikan sidebar, navbar, tombol, dan form filter */
+            header, nav, aside, form, button, .md\:hidden { display: none !important; }
+            /* Hilangkan jarak sidebar */
+            .md\:ml-\[280px\] { margin-left: 0 !important; }
+            /* Paksa margin halaman PDF */
+            @page { margin: 1cm; size: A4 portrait; }
+            /* Paksa 3 kartu ringkasan sejajar ke samping (tidak turun ke bawah) */
+            .grid-cols-1.md\:grid-cols-3 {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 15px !important;
+                width: 100% !important;
+            }
+            .grid-cols-1.md\:grid-cols-3 > div {
+                flex: 1 !important;
+                min-width: 0 !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important; /* Hemat tinta */
+                page-break-inside: avoid !important;
+            }
+            /* Pastikan tabel tidak terpotong di tengah baris */
+            table, tr, td, th { page-break-inside: avoid !important; }
+        }
+    </style>
+    
     <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-[#F8FAFC] overflow-x-hidden w-full">
         <x-sidebar />
 
