@@ -92,7 +92,7 @@
                 <!-- Ringkasan Statistik Kartu -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
                     <x-card>
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Pemasukan</p>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Pendapatan</p>
                         <h3 class="text-2xl font-bold text-emerald-600">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</h3>
                     </x-card>
                     <x-card>

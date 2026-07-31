@@ -71,7 +71,7 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pemasukan</p>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pendapatan</p>
                                 <h3 class="text-2xl font-bold text-slate-900 mt-2">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
                             </div>
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">

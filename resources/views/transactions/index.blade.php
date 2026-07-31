@@ -53,7 +53,7 @@
             <main class="p-8 space-y-6 flex-1">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Kelola Transaksi</h1>
-                    <p class="text-sm text-slate-500 mt-0.5">Catat dan pantau seluruh pemasukan serta pengeluaran Anda.</p>
+                    <p class="text-sm text-slate-500 mt-0.5">Catat dan pantau seluruh pendapatan serta pengeluaran Anda.</p>
                 </div>
 
                 @if(session('success'))
@@ -241,7 +241,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tipe Transaksi</label>
                         <select name="tipe" x-model="tipe" class="w-full rounded-xl border-slate-200 text-sm py-3 px-4">
-                            <option value="masuk">Pemasukan (Masuk)</option>
+                            <option value="masuk">Pendapatan (Masuk)</option>
                             <option value="keluar">Pengeluaran (Keluar)</option>
                         </select>
                     </div>
