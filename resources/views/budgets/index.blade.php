@@ -5,20 +5,22 @@
 
         <!-- Konten Utama -->
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
+            <!-- Navbar -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
-                    <!-- Tombol Garis Tiga (Hamburger) untuk Membuka Sidebar -->
                     <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
 
-                    <div class="relative w-full">
+                    <!-- Form Pencarian Navbar -->
+                    <form action="{{ route('budgets.index') }}" method="GET" class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" placeholder="Cari transaksi atau data..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
-                    </div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari anggaran..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
+                        @if(request('bulan')) <input type="hidden" name="bulan" value="{{ request('bulan') }}"> @endif
+                        @if(request('tahun')) <input type="hidden" name="tahun" value="{{ request('tahun') }}"> @endif
+                    </form>
                 </div>
 
                 <div class="flex items-center gap-4 shrink-0">
@@ -44,6 +46,7 @@
 
                     <!-- Filter Bulan & Tahun -->
                     <form method="GET" action="{{ route('budgets.index') }}" class="flex flex-wrap items-center gap-2">
+                        @if(request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
                         <select name="bulan" class="rounded-xl border border-slate-200 text-xs py-2 px-3 focus:ring-red-500 focus:border-red-500 bg-white text-slate-800 font-medium">
                             @for($i = 1; $i <= 12; $i++)
                                 <option value="{{ $i }}" {{ $bulan == $i ? 'selected' : '' }}>

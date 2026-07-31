@@ -5,7 +5,7 @@
 
         <!-- Konten Utama -->
         <div class="flex-1 md:ml-[280px] flex flex-col min-h-screen">
-            <!-- Navbar dengan Tombol Menu Mobile yang Aktif -->
+            <!-- Navbar -->
             <header class="h-[80px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 z-40 w-full">
                 <div class="flex items-center gap-3 w-full sm:w-96">
                     <button @click="$dispatch('toggle-sidebar')" class="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none shrink-0 flex items-center justify-center">
@@ -66,21 +66,21 @@
                             @csrf
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Pilih Kategori</label>
-                                <select name="existing_category_id" id="category_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="toggleCategoryInput(this)">
+                                <select name="existing_category_id" id="category_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50" onchange="toggleCategoryInput(this)">
                                     <option value="" disabled selected>Pilih Kategori</option>
-                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}" data-nama="{{ $cat->nama }}" data-tipe="{{ $cat->tipe }}">
                                             {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
                                         </option>
                                     @endforeach
+                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
                                 </select>
                             </div>
 
                             <!-- Input Nama Kategori Baru (Sembunyi by default) -->
                             <div id="new_category_container" style="display: none;">
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Kategori Baru</label>
-                                <input type="text" name="nama" id="new_category_input" placeholder="Contoh: Makanan, Gaji, Transport" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
+                                <input type="text" name="nama" id="new_category_input" placeholder="Contoh: Makanan, Gaji, Transport" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-red-50/30">
                             </div>
 
                             <div>
@@ -154,18 +154,16 @@
             const tipeInfo = document.getElementById('tipe_info');
 
             if (selectedValue === 'new') {
-                // Tampilkan input nama kategori baru
                 newCatContainer.style.display = 'block';
                 newCatInput.required = true;
                 newCatInput.value = '';
 
                 // Buka kunci tipeSelect dan kembalikan ke opsi kosong default
-                tipeSelect.disabled = false;
+                tipeSelect.style.pointerEvents = 'auto';
                 tipeSelect.value = ''; 
                 tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
                 tipeInfo.innerText = "Pilih tipe kategori baru.";
             } else if (selectedValue !== '') {
-                // Sembunyikan input nama kategori baru
                 newCatContainer.style.display = 'none';
                 newCatInput.required = false;
 
@@ -174,10 +172,10 @@
                 const kategoriNama = selectedOption.getAttribute('data-nama');
                 const kategoriTipe = selectedOption.getAttribute('data-tipe');
 
-                // Isi otomatis dan kunci tipeSelect
+                // Isi otomatis dan KUNCI dropdown tipe menggunakan pointer-events
                 newCatInput.value = kategoriNama;
                 tipeSelect.value = kategoriTipe;
-                tipeSelect.disabled = true;
+                tipeSelect.style.pointerEvents = 'none'; // Cegah klik
                 tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
                 tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori yang dipilih.";
             }
