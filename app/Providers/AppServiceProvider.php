@@ -21,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Paksa semua URL dan form menggunakan protokol HTTPS
+        // agar browser tidak memblokir pengiriman data
+        URL::forceScheme('https');
     }
 }
