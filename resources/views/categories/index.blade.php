@@ -12,12 +12,13 @@
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
 
-                    <div class="relative w-full">
+                    <!-- Form Pencarian Navbar -->
+                    <form action="{{ route('categories.index') }}" method="GET" class="relative w-full">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" placeholder="Cari transaksi atau data..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
-                    </div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari kategori..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-slate-50/50">
+                    </form>
                 </div>
 
                 <div class="flex items-center gap-4 shrink-0">
@@ -47,6 +48,16 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
+                        <ul class="list-disc list-inside">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Form Tambah Kategori -->
                     <x-card class="h-fit">
@@ -54,16 +65,34 @@
                         <form action="{{ route('categories.store') }}" method="POST" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Kategori</label>
-                                <input type="text" name="nama" placeholder="Contoh: Makanan, Gaji, Transport" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Pilih Kategori</label>
+                                <select name="existing_category_id" id="category_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4" onchange="toggleCategoryInput(this)">
+                                    <option value="" disabled selected>Pilih Kategori</option>
+                                    <option value="new" class="font-bold text-red-600">+ Tambah Kategori Baru...</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}" data-nama="{{ $cat->nama }}" data-tipe="{{ $cat->tipe }}">
+                                            {{ $cat->nama }} ({{ ucfirst($cat->tipe) }})
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+
+                            <!-- Input Nama Kategori Baru (Sembunyi by default) -->
+                            <div id="new_category_container" style="display: none;">
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Kategori Baru</label>
+                                <input type="text" name="nama" id="new_category_input" placeholder="Contoh: Makanan, Gaji, Transport" class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tipe Kategori</label>
-                                <select name="tipe" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4">
+                                <select name="tipe" id="tipe_select" required class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800">
+                                    <option value="" disabled selected>Pilih Tipe Kategori</option>
                                     <option value="masuk">Pemasukan (Masuk)</option>
                                     <option value="keluar">Pengeluaran (Keluar)</option>
                                 </select>
+                                <p class="text-xs text-slate-400 mt-1" id="tipe_info">Pilih tipe kategori baru.</p>
                             </div>
+
                             <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 px-5 rounded-xl text-sm font-semibold shadow-sm shadow-red-500/25 transition">
                                 Simpan Kategori
                             </button>
@@ -74,7 +103,7 @@
                     <x-card class="lg:col-span-2">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Daftar Kategori</h3>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-xs font-semibold text-slate-400 uppercase border-b border-slate-200">
                                         <th class="py-3 px-4 rounded-l-xl">No</th>
@@ -114,4 +143,44 @@
             </main>
         </div>
     </div>
+
+    <!-- INI BAGIAN JAVASCRIPT-NYA -->
+    <script>
+        function toggleCategoryInput(selectElement) {
+            const selectedValue = selectElement.value;
+            const newCatContainer = document.getElementById('new_category_container');
+            const newCatInput = document.getElementById('new_category_input');
+            const tipeSelect = document.getElementById('tipe_select');
+            const tipeInfo = document.getElementById('tipe_info');
+
+            if (selectedValue === 'new') {
+                // Tampilkan input nama kategori baru
+                newCatContainer.style.display = 'block';
+                newCatInput.required = true;
+                newCatInput.value = '';
+
+                // Buka kunci tipeSelect dan kembalikan ke opsi kosong default
+                tipeSelect.disabled = false;
+                tipeSelect.value = ''; 
+                tipeSelect.className = "w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm py-3 px-4 bg-slate-50/50 text-slate-800";
+                tipeInfo.innerText = "Pilih tipe kategori baru.";
+            } else if (selectedValue !== '') {
+                // Sembunyikan input nama kategori baru
+                newCatContainer.style.display = 'none';
+                newCatInput.required = false;
+
+                // Ambil data nama & tipe dari option yang dipilih
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                const kategoriNama = selectedOption.getAttribute('data-nama');
+                const kategoriTipe = selectedOption.getAttribute('data-tipe');
+
+                // Isi otomatis dan kunci tipeSelect
+                newCatInput.value = kategoriNama;
+                tipeSelect.value = kategoriTipe;
+                tipeSelect.disabled = true;
+                tipeSelect.className = "w-full rounded-xl border-slate-200 text-sm py-3 px-4 bg-slate-100 text-slate-600 cursor-not-allowed";
+                tipeInfo.innerText = "Tipe terkunci otomatis mengikuti kategori yang dipilih.";
+            }
+        }
+    </script>
 </x-app-layout>
