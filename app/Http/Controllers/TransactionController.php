@@ -13,17 +13,21 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $userId = Auth::id();
+        
+        // Menangkap filter bulan dan tahun (default ke bulan & tahun saat ini)
+        $bulan = $request->input('bulan', date('m'));
+        $tahun = $request->input('tahun', date('Y'));
+        $search = $request->input('search');
+
         $query = Transaction::with('category')->where('user_id', $userId);
     
-        if ($request->has('search') && $request->search != '') {
-            $query->where('deskripsi', 'like', '%' . $request->search . '%');
+        if ($search && $search != '') {
+            $query->where('deskripsi', 'like', '%' . $search . '%');
         }
-        if ($request->has('bulan') && $request->bulan != '') {
-            $query->whereMonth('tanggal', $request->bulan);
-        }
-        if ($request->has('tahun') && $request->tahun != '') {
-            $query->whereYear('tanggal', $request->tahun);
-        }
+        
+        // Terapkan filter bulan dan tahun
+        $query->whereMonth('tanggal', $bulan)
+              ->whereYear('tanggal', $tahun);
     
         // Urutkan dari yang lama ke baru (Akuntansi formal: asc)
         $transactions = $query->orderBy('tanggal', 'asc')
@@ -36,7 +40,7 @@ class TransactionController extends Controller
 
         $savingTargets = SavingTarget::where('user_id', $userId)->get();
         
-        return view('transactions.index', compact('transactions', 'categories', 'savingTargets'));
+        return view('transactions.index', compact('transactions', 'categories', 'savingTargets', 'bulan', 'tahun'));
     }
 
     public function store(Request $request)
